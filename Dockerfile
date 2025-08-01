@@ -2,7 +2,10 @@
 FROM php:8.2-apache
 
 # 🧩 Install necessary PHP extensions (e.g. OpenSSL, mbstring, zip, json)
-RUN docker-php-ext-install openssl mbstring zip
+RUN apt-get update && apt-get install -y \
+    libzip-dev \
+    libssl-dev \
+    && docker-php-ext-install zip mbstring
 
 # 🛠️ Enable Apache mod_rewrite (for router.php / stealth redirects)
 RUN a2enmod rewrite headers
@@ -18,7 +21,7 @@ RUN echo "ServerSignature Off" >> /etc/apache2/apache2.conf && \
 # 🔐 Move sensitive files to secure internal path (not publicly served)
 RUN mkdir -p /opt/secure_payload
 # COPY payload_core.b64 /opt/secure_payload/
-COPY tokens.json /opt/secure_payload/
+# COPY tokens.json /opt/secure_payload/
 # COPY encryption_utils.php /opt/secure_payload/
 
 # ⚙️ App source files (excluding `.git`, `payload_core.b64`, etc.)
