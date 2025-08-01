@@ -17,7 +17,7 @@ RUN echo "ServerSignature Off" >> /etc/apache2/apache2.conf && \
 
 # 🔐 Move sensitive files to secure internal path (not publicly served)
 RUN mkdir -p /opt/secure_payload
-COPY payload_core.b64 /opt/secure_payload/
+# COPY payload_core.b64 /opt/secure_payload/
 COPY tokens.json /opt/secure_payload/
 # COPY encryption_utils.php /opt/secure_payload/
 
