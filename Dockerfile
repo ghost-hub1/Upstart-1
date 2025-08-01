@@ -39,6 +39,11 @@ RUN touch /var/www/html/.htaccess && \
     echo "Options -Indexes" >> /var/www/html/.htaccess && \
     echo "RewriteEngine On" >> /var/www/html/.htaccess
 
+# Increase PHP memory limit
+RUN echo "memory_limit=1024M" > /usr/local/etc/php/conf.d/memory-limit.ini
+
+
+
 # 📍 Working directory
 WORKDIR /var/www/html
 
