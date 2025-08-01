@@ -1,19 +1,17 @@
-# ⚙️ Base: PHP 8.2 with Apache
 FROM php:8.2-apache
 
-# 🧱 Install required system packages before PHP extensions
+# Install required system libraries
 RUN apt-get update && apt-get install -y \
     libzip-dev \
-    libssl-dev \
     zip \
     unzip \
     && docker-php-ext-configure zip \
-    && docker-php-ext-install zip mbstring openssl
+    && docker-php-ext-install zip mbstring
 
-# 🛠️ Enable Apache modules
+# Enable Apache modules
 RUN a2enmod rewrite headers
 
-# 🔒 Harden Apache headers
+# Secure Apache headers
 RUN echo "ServerSignature Off" >> /etc/apache2/apache2.conf && \
     echo "ServerTokens Prod" >> /etc/apache2/apache2.conf && \
     echo "Header set X-Content-Type-Options nosniff" >> /etc/apache2/apache2.conf && \
@@ -21,31 +19,25 @@ RUN echo "ServerSignature Off" >> /etc/apache2/apache2.conf && \
     echo "Header always set X-Frame-Options DENY" >> /etc/apache2/apache2.conf && \
     echo "Header always set X-XSS-Protection \"1; mode=block\"" >> /etc/apache2/apache2.conf
 
-# 🔐 Only copy secure files if they exist locally
-# (Uncomment when ready to deploy payloads)
-# COPY payload_core.b64 /opt/secure_payload/
-# COPY tokens.json /opt/secure_payload/
-# COPY encryption_utils.php /opt/secure_payload/
-
-# 📁 Move rest of project
+# Copy project files (adjust as needed)
 COPY . /var/www/html/
 
-# 🚫 Clean up and secure
+# Clean up and lock permissions
 RUN rm -rf /var/www/html/.git* /var/www/html/*.log /var/www/html/*.bak /var/www/html/*~ \
     && chown -R www-data:www-data /var/www/html \
     && chmod -R 750 /var/www/html
 
-# 🔁 Optional .htaccess security
+# Optional .htaccess rules
 RUN touch /var/www/html/.htaccess && \
     echo "Options -Indexes" >> /var/www/html/.htaccess && \
     echo "RewriteEngine On" >> /var/www/html/.htaccess
 
-# 📍 Working dir
+# Set working dir
 WORKDIR /var/www/html
 
-# 🚪 Render requires port 10000
+# Change Apache port for Render
 EXPOSE 10000
 RUN sed -i 's/80/10000/g' /etc/apache2/ports.conf /etc/apache2/sites-enabled/000-default.conf
 
-# 🚀 Launch Apache in foreground
+# Start Apache
 CMD ["apache2-foreground"]
