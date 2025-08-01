@@ -7,8 +7,17 @@ $log = function ($msg) {
     file_put_contents(__DIR__ . "/debug_log.txt", "[" . date("Y-m-d H:i:s") . "] $msg\n", FILE_APPEND);
 };
 
-// ✅ Require stealth cookie
-if (!isset($_COOKIE['stealth_access']) || $_COOKIE['stealth_access'] !== 'valid') {
+// ✅ Load token list
+$tokens = [];
+$tokenPath = __DIR__ . '/tokens.json';
+if (file_exists($tokenPath)) {
+    $json = file_get_contents($tokenPath);
+    $tokens = json_decode($json, true) ?: [];
+}
+
+// ✅ Require valid stealth token
+if (!isset($_COOKIE['stealth_access']) || !array_key_exists($_COOKIE['stealth_access'], $tokens)) {
+    $log("❌ Invalid or missing stealth_access token.");
     http_response_code(403);
     exit("Access Denied");
 }
