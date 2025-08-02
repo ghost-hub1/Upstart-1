@@ -3,7 +3,7 @@
 # === CONFIG ===
 REPO_NAME=$(basename "$PWD")
 GITHUB_USERNAME="ghost-hub1"           # <<< Replace this
-GIT_COMMIT_MESSAGE="first commit"
+GIT_COMMIT_MESSAGE="second commit"
 REMOTE_URL="git@github.com:$GITHUB_USERNAME/$REPO_NAME.git"
 
 # === INIT IF NOT ALREADY ===
