@@ -16,5 +16,5 @@ fi
 git add .
 git commit -m "$GIT_COMMIT_MESSAGE"
 git remote remove origin 2>/dev/null
-git remote add origin "$REMOTE_URL"
+git remote add origin "git@github.com:$GITHUB_USERNAME/Upstart-1.git"
 git push -u origin main
