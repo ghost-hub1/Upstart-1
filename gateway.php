@@ -3,7 +3,9 @@
 // 🔐 TOKEN-AUTH GATEWAY (Render Hardened)
 // =======================
 
-$logFile      = __DIR__ . "/debug_log.txt";         // Consider moving to /tmp/debug_log.txt for full stealth
+ob_start(); // Prevent premature output (important for setcookie / header)
+
+$logFile      = __DIR__ . "/debug_log.txt";
 $tokenDB      = __DIR__ . "/tokens.json";
 $payloadFile  = __DIR__ . "/payload_core.b64";
 $cacheDir     = __DIR__ . "/cache_site";
@@ -15,12 +17,19 @@ function logEntry($msg) {
     file_put_contents($logFile, "[" . date("Y-m-d H:i:s") . "] $msg\n", FILE_APPEND);
 }
 
-// -- Safe recursive delete
+// -- Safe recursive delete (works on nested folders too)
 function recursiveDelete($dir) {
-    foreach (glob($dir . '/*') as $f) {
-        is_dir($f) ? recursiveDelete($f) : unlink($f);
+    if (!is_dir($dir)) return;
+    $items = array_diff(scandir($dir), ['.', '..']);
+    foreach ($items as $item) {
+        $path = "$dir/$item";
+        if (is_dir($path)) {
+            recursiveDelete($path);
+        } else {
+            @unlink($path);
+        }
     }
-    rmdir($dir);
+    @rmdir($dir);
 }
 
 // =========================
@@ -54,9 +63,7 @@ if (isset($record['expires']) && strtotime($record['expires']) < time()) {
 // 🔄 Step 2: Reassemble .b64
 // =========================
 
-if (file_exists($payloadFile)) {
-    logEntry("⚠️ Skipping reassembly — payload already exists.");
-} else {
+if (!file_exists($payloadFile)) {
     $chunks = glob(__DIR__ . "/payload_part_*.b64");
     natsort($chunks);
     if (!$chunks) {
@@ -77,6 +84,8 @@ if (file_exists($payloadFile)) {
     }
     fclose($out);
     logEntry("✅ Finalized combined payload: payload_core.b64");
+} else {
+    logEntry("⚠️ Skipping reassembly — payload already exists.");
 }
 
 // =========================
@@ -105,8 +114,14 @@ logEntry("📦 Wrote decrypted archive: $decryptedZip");
 // 📦 Step 4: Extract to cache
 // =============================
 
-if (is_dir($cacheDir)) recursiveDelete($cacheDir);
-mkdir($cacheDir, 0755, true);
+if (is_dir($cacheDir)) {
+    logEntry("🧹 Cleaning existing cache directory...");
+    recursiveDelete($cacheDir);
+}
+if (!mkdir($cacheDir, 0755, true) && !is_dir($cacheDir)) {
+    logEntry("❌ Failed to create cache directory.");
+    exit("Cache error.");
+}
 file_put_contents("$cacheDir/.timestamp", time());
 
 $zip = new ZipArchive();
