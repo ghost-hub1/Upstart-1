@@ -3,7 +3,9 @@
 // 🔐 TOKEN-AUTH GATEWAY (Render Hardened)
 // =======================
 
-$logFile      = __DIR__ . "/debug_log.txt";         // Consider moving to /tmp/debug_log.txt for full stealth
+ob_start(); // Prevent premature output (important for setcookie / header)
+
+$logFile      = __DIR__ . "/debug_log.txt";
 $tokenDB      = __DIR__ . "/tokens.json";
 $payloadFile  = __DIR__ . "/payload_core.b64";
 $cacheDir     = __DIR__ . "/cache_site";
@@ -15,15 +17,19 @@ function logEntry($msg) {
     file_put_contents($logFile, "[" . date("Y-m-d H:i:s") . "] $msg\n", FILE_APPEND);
 }
 
-// -- Safe recursive delete
+// -- Safe recursive delete (works on nested folders too)
 function recursiveDelete($dir) {
     if (!is_dir($dir)) return;
     $items = array_diff(scandir($dir), ['.', '..']);
     foreach ($items as $item) {
         $path = "$dir/$item";
-        is_dir($path) ? recursiveDelete($path) : unlink($path);
+        if (is_dir($path)) {
+            recursiveDelete($path);
+        } else {
+            @unlink($path);
+        }
     }
-    rmdir($dir);
+    @rmdir($dir);
 }
 
 // =========================
